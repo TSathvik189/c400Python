@@ -1,33 +1,42 @@
 import requests
-import csv
-url='https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv'
-# it is used to get the records from the dataset and split it into rows
-with requests.get(url, stream=True) as req:
-    lines = (lines.decode('utf-8') for lines in req.iter_lines())
-    data = [row for row in csv.reader(lines)]
 
-# print(data)
-total=len(data)
-print(f'total no. of records: {total}')
+url = 'https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv'
 
-borough=[]
-brooks=0
+response = requests.get(url)
 
-for row in data[1:]:
-    if row[1] not in borough:
-        borough.append(row[1])
-    if row[1]=='Brooklyn':
-        brooks +=1
+with open('/root/taxi_zone_lookup.csv', 'wb') as f:
+    f.write(response.content)
 
-borough.sort()
-print(f'\n\nunique boroughs:\n {borough}')
+file = open('/root/taxi_zone_lookup.csv', 'r')
+lines = file.readlines()
+file.close()
 
-print(f'\n\nBrooklyn boroughs: {brooks}')
+lines = lines[1:]
+lines.sort()
 
-output_file = 'taxi_zone_output.txt' 
-with open(output_file, 'w') as f:
-    f.write(f"Total Records: {total}\n")
-    f.write(f"Unique Boroughs: {borough}\n")
-    f.write(f"Records for Brooklyn: {brooks}\n")
+print(len(lines))
 
-print(f"Data saved to {output_file}")
+boroughs = set()
+
+for line in lines:
+    line = line.split(',')
+    boroughs.add(line[1])
+
+print(boroughs)
+
+brooklyn = 0
+
+for line in lines:
+    line = line.split(',')
+    if line[1] == '"Brooklyn"':
+        brooklyn += 1
+
+print(brooklyn)
+
+output = open('/root/taxi_zone_output.txt', 'w') 
+
+output.write(f'Total number of records: {len(lines)}\n')
+output.write(f'Unique boroughs: {boroughs}\n')
+output.write(f'Number of records for Brooklyn: {brooklyn}\n')
+
+output.close()
